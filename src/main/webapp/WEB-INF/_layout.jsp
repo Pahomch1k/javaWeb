@@ -1,4 +1,4 @@
-<%--
+<%@ page import="java.util.Date" %><%--
   Created by IntelliJ IDEA.
   User: Pahomch1k
   Date: 2023-10-06
@@ -16,11 +16,16 @@
     <title>Java web</title>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+    <link rel="stylesheet" href="<%= context %>/css/site.css?time= <%=new Date().getTime()%>"/>
 </head>
 <body>
 <nav>
     <div class="nav-wrapper red darken-1">
-        <a href="<%=context%>" class="brand-logo right ">Logo</a>
+
+        <!-- Modal Trigger -->
+        <a class="right modal-trigger auth-icon" href="#auth-modal"><i class="material-icons"> login </i></a>
+
+        <a href="<%=context%>" class=" right site-logo">Logo</a>
         <ul id="nav-mobile">
             <li><a href="<%=context%>/jsp">About JSP</a></li>
             <li <%= pageBody.equals( "filters.jsp") ? "class='active'" : ""%>>
@@ -28,6 +33,9 @@
             </li>
             <li <%= pageBody.equals( "ioc.jsp") ? "class='active'" : ""%>>
                 <a href="<%=context%>/ioc">Ioc</a>
+            </li>
+            <li <%= pageBody.equals( "db.jsp") ? "class='active'" : ""%>>
+                <a href="<%=context%>/db">DB</a>
             </li>
         </ul>
     </div>
@@ -63,6 +71,21 @@
     </div>
 </footer>
 
+<!-- Modal Structure -->
+<div id="auth-modal" class="modal">
+    <div class="modal-content">
+        <h4>Авторизация</h4>
+        <p>A bunch of text</p>
+    </div>
+    <div class="modal-footer">
+        <a href="<%=context%>/signup" class="modal-close waves-effect waves-green btn-flat red darken-3">Регистрация</a>
+        <a href="#!" class="waves-effect waves-green btn-flat red darken-4">Вход</a>
+
+    </div>
+</div>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+<script src="<%=context%>/js/site.js?time= <%=new Date().getTime()%>"></script>
+
 </body>
 </html>
