@@ -40,6 +40,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const insertButton = document.getElementById("db-insert-button")
     if (insertButton) insertButton.addEventListener('click', insertButtonClick);
+
+    const readButton = document.getElementById("db-read-button")
+    if (readButton) readButton.addEventListener('click', readButtonClick);
 });
 
 function createButtonClick(){
@@ -65,7 +68,7 @@ function insertButtonClick(){
     }
 
     // Simple phone validation (just checks if it's numeric and 10-15 characters long)
-    const phonePattern = /^\d{10,15}$/;
+    const phonePattern = /^\+\d{10,15}$/;
     if (!phoneInput.value.match(phonePattern)) {
         outputElem.textContent = "Please enter a correct phone number!";
         return;
@@ -90,6 +93,15 @@ function insertButtonClick(){
     });
 }
 
+function readButtonClick() {
+    fetch(window.location.href, {
+        method: "COPY",
+    })
+        .then(response => response.json())
+        .then(data => {
+            console.table(data);
+        });
+}
 
 //
 // function insertButtonClick(){

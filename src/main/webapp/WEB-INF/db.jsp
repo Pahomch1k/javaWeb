@@ -27,3 +27,10 @@
     <br>
     <u id="out"></u>
 </p>
+
+<div class="row">
+    <button id="db-read-button" class="waves-effect waves-light btn">
+        <i class="material-icons right">view_list</i>
+        Посмотреть
+    </button>
+</div>
