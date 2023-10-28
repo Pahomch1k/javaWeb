@@ -2,29 +2,26 @@ package step.learning.servlets;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import step.learning.dao.UserDao;
 import step.learning.dto.models.RegFormModel;
 import step.learning.services.formparse.FormParseResult;
 import step.learning.services.formparse.FormParseService;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.*;
-import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.text.ParseException;
-import java.util.Arrays;
-import java.util.List;
 
 @Singleton
 public class SignupServlet extends HttpServlet {
 
     private final FormParseService formParseService;
+    private final UserDao userDao;
 
     @Inject
-    public SignupServlet(FormParseService formParseService){
+    public SignupServlet(FormParseService formParseService, UserDao userDao){
         this.formParseService = formParseService;
+        this.userDao = userDao;
     }
 
     @Override
@@ -76,28 +73,9 @@ public class SignupServlet extends HttpServlet {
             session.setAttribute("reg-status", 1);
         }
         else {
+            userDao.addFromForm( model );
             session.setAttribute("reg-status", 2);
         }
         resp.sendRedirect(req.getRequestURI());
-//
-//        Part filePart = req.getPart("reg-avatar");
-//        if (filePart != null && filePart.getSize() > 0) {
-//            String fileName = Paths.get(filePart.getSubmittedFileName()).getFileName().toString();
-//            String fileExtension = fileName.substring(fileName.lastIndexOf(".") + 1);
-//
-//            List<String> allowedExtensions = Arrays.asList("jpg", "jpeg", "png", "gif");
-//            if (!allowedExtensions.contains(fileExtension)) {
-//                resp.getWriter().write("Недопустиме розширення файлу.");
-//                return;
-//            }
-//
-//            String savePath = "/path/to/your/folder";
-//            File uploads = new File(savePath);
-//            File file = new File(uploads, fileName);
-//
-//            try (InputStream input = filePart.getInputStream()) {
-//                Files.copy(input, file.toPath());
-//            }
-//        }
     }
 }

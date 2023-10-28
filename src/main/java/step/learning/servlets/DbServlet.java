@@ -1,12 +1,12 @@
 package step.learning.servlets;
+import step.learning.dto.entities.CallMe;
+
 
 import com.google.gson.*;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import step.learning.dto.entities.CallMe;
+import step.learning.dao.CallMeDao;
 import step.learning.services.db.DbProvider;
-import step.learning.services.validation.DataValidation;
-import step.learning.services.validation.ValidationResult;
 
 import javax.inject.Named;
 import javax.servlet.ServletException;
@@ -20,8 +20,6 @@ import java.nio.charset.StandardCharsets;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -30,11 +28,14 @@ public class DbServlet extends HttpServlet {
     private final DbProvider dbProvider;
     private final String dbPrefix;
     //private int x = 0;
+    private final CallMeDao callMeDao;
 
     @Inject
-    public DbServlet(DbProvider dbProvider, @Named("db-prefix") String dbPrefix) {
+    public DbServlet(DbProvider dbProvider, @Named("db-prefix") String dbPrefix, CallMeDao callMeDao) {
         this.dbProvider = dbProvider;
         this.dbPrefix = dbPrefix;
+        this.callMeDao = callMeDao;
+
     }
 
     @Override
@@ -48,28 +49,53 @@ public class DbServlet extends HttpServlet {
 
     protected void doCopy(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 
-        List<CallMe> calls = new ArrayList<>();
-        calls.add( new CallMe(100500, "Petya", "+380955431234", new Date()) );
-        calls.add( new CallMe(100501, "vasya", "+380965435555", new Date()) );
-
+        List<CallMe> calls = callMeDao.getAll();
         Gson gson = new GsonBuilder().create();
         resp.getWriter().print( gson.toJson( calls ) );
 
     }
     protected void doPatch(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        resp.getWriter().print("Patch works");
-    }
+        resp.setContentType( "application/json" );
 
+        String callId = req.getParameter("call-id");
+        if (callId == null) {
+            resp.setStatus( 400 );
+            resp.getWriter().print("\"Missing required parameter 'call-id'\" ");
+            return;
+        }
+        CallMe item = callMeDao.getById(callId);
+        if (item == null) {
+            resp.setStatus( 404 );
+            resp.getWriter().print("\"Item not found for given parameter 'call-id'\" ");
+            return;
+        }
+        if ( item.getCallMoment() != null ) {
+            resp.setStatus( 422 );
+            resp.getWriter().print("\"Unprocessable Content: Item was processed early\" ");
+            return;
+        }
+        if (callMeDao.updateCallMoment( item )) {
+            resp.setStatus(202);
+            resp.getWriter().print( new Gson().toJson( item ));
+        }
+        else {
+            resp.setStatus( 500 );
+            resp.getWriter().print("\"Server error\" ");
+            return;
+        }
+    }
 
     @Override
     protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String status;
         String message;
         String sql = "CREATE TABLE " + dbPrefix + "call_me (" +
-                "id   BIGINT PRIMARY KEY," +
-                "name VARCHAR(64) NULL," +
-                "phone CHAR(13) NOT NULL COMMENT '+380 95 862 27 08'," +
-                "moment DATETIME DEFAULT CURRENT_TIMESTAMP" +
+                "`id`   BIGINT PRIMARY KEY," +
+                "`name` VARCHAR(64) NULL," +
+                "`phone` CHAR(13) NOT NULL COMMENT '+380 95 862 27 08'," +
+                "`moment` DATETIME DEFAULT CURRENT_TIMESTAMP, " +
+                "`call_moment` DATETIME NULL, " +
+                "`delete_moment` DATETIME NULL" +
                 ") ENGINE =  InnoDB DEFAULT CHARSET = UTF8";
         try( Statement statement = dbProvider.getConnection().createStatement() ){
             statement.executeUpdate( sql );
@@ -85,7 +111,6 @@ public class DbServlet extends HttpServlet {
         result.addProperty("message", message);
         resp.getWriter().print( result.toString() );
     }
-
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String connectionStatus;
@@ -101,7 +126,6 @@ public class DbServlet extends HttpServlet {
         req.setAttribute("page-body", "db.jsp");
         req.getRequestDispatcher("WEB-INF/_layout.jsp").forward(req, resp);
     }
-
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         resp.setContentType("application/json");
@@ -122,33 +146,12 @@ public class DbServlet extends HttpServlet {
                 bytes.write(buffer, 0, len);
             }
             json = bytes.toString(StandardCharsets.UTF_8.name());
-            //JsonObject data = JsonParser.parseString(json).getAsJsonObject();
-
-            // Validate data using our DataValidation class
-//            ValidationResult validationResult = DataValidation.validate(data);
-//            if (!validationResult.isValid()) {
-//                result.addProperty("status", "validation error");
-//                result.addProperty("message", validationResult.getMessage());
-//                resp.getWriter().print(result.toString());
-//                return;
-//            }
-//            // If there's an error, set the result accordingly
-//            if (!validationResult.isValid()) {
-//                result.addProperty("status", "validation error");
-//                result.addProperty("message", validationResult.getMessage());
-//            } else {
-//                result.addProperty("name", data.get("name").getAsString());
-//                result.addProperty("phone", data.get("phone").getAsString());
-//            }
         }
         catch (IOException ex) {
             System.err.println( ex.getMessage());
             resp.setStatus( 500 );
             resp.getWriter().print("\"Server error/ Details on servers logs\" ");
             return;
-//            json = ex.getMessage();
-//            result.addProperty("status", "error");
-//            result.addProperty("message", ex.getMessage());
         }
         JsonObject data;
         try {
@@ -199,5 +202,37 @@ public class DbServlet extends HttpServlet {
 
         resp.setContentType("application/json");
         resp.getWriter().print(result.toString());
+    }
+
+    @Override
+    protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        resp.setContentType( "application/json" );
+
+        String callId = req.getParameter("call-id");
+        if (callId == null) {
+            resp.setStatus( 400 );
+            resp.getWriter().print("\"Missing required parameter 'call-id'\" ");
+            return;
+        }
+        CallMe item = callMeDao.getById(callId);
+        if (item == null) {
+            resp.setStatus( 404 );
+            resp.getWriter().print("\"Item not found for given parameter 'call-id'\" ");
+            return;
+        }
+        if ( item.getDeleteMoment() != null ) {
+            resp.setStatus( 422 );
+            resp.getWriter().print("\"Unprocessable Content: Item was processed early\" ");
+            return;
+        }
+        if (callMeDao.delete( item )) {
+            resp.setStatus(202);
+            resp.getWriter().print("\"Operation completed\" ");
+        }
+        else {
+            resp.setStatus( 500 );
+            resp.getWriter().print("\"Server error\" ");
+            return;
+        }
     }
 }

@@ -34,3 +34,11 @@
         Посмотреть
     </button>
 </div>
+
+<div class="row">
+    <button id="show-all-button" class="waves-effect waves-light btn">
+        <i class="material-icons right">view_list</i>
+        Показати всі
+    </button>
+</div>
+<div id="calls-conteiner"></div>

@@ -1,26 +1,45 @@
 package step.learning.dto.entities;
 
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.util.Date;
 
-public class CallMe {
-    private long id;
-    private String name, phone;
 
+public class CallMe {
+    private String id;
+    private String name, phone;
     private Date moment;
 
-    public CallMe(long id, String name, String phone, Date moment) {
-        this.id = id;
-        this.name = name;
-        this.phone = phone;
-        this.moment = moment;
+    private Date callMoment;
+    private Date deleteMoment;
+
+
+    public CallMe(ResultSet resultSet) throws SQLException {
+        this.setId(resultSet.getString("id"));
+        this.setName(resultSet.getString("name"));
+        this.setPhone(resultSet.getString("phone"));
+        this.setMoment(new Date(resultSet.getTimestamp("moment").getTime()));
+        Timestamp callMoment = resultSet.getTimestamp("call_moment");
+        this.setCallMoment(callMoment == null ? null : new Date(callMoment.getTime())) ;
+        Timestamp deleteMoment = resultSet.getTimestamp("delete_moment");
+        this.setDeleteMoment(deleteMoment == null ? null : new Date(deleteMoment.getTime())) ;
     }
 
-    public long getId() {
+    public Date getCallMoment() {
+        return callMoment;
+    }
+
+    public void setCallMoment(Date callMoment) {
+        this.callMoment = callMoment;
+    }
+
+    public String getId() {
         return id;
     }
 
-    public void setId(long id) {
+    public void setId(String id) {
         this.id = id;
     }
 
@@ -46,5 +65,13 @@ public class CallMe {
 
     public void setMoment(Date moment) {
         this.moment = moment;
+    }
+
+    public Date getDeleteMoment() {
+        return deleteMoment;
+    }
+
+    public void setDeleteMoment(Date deleteMoment) {
+        this.deleteMoment = deleteMoment;
     }
 }

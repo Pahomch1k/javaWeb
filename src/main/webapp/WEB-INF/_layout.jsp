@@ -37,6 +37,9 @@
             <li <%= pageBody.equals( "db.jsp") ? "class='active'" : ""%>>
                 <a href="<%=context%>/db">DB</a>
             </li>
+            <li <%= pageBody.equals( "spa.jsp") ? "class='active'" : ""%>>
+                <a href="<%=context%>/spa">SPA</a>
+            </li>
         </ul>
     </div>
 </nav>
@@ -75,17 +78,33 @@
 <div id="auth-modal" class="modal">
     <div class="modal-content">
         <h4>Авторизация</h4>
-        <p>A bunch of text</p>
+
+        <div class="row">
+            <div class="input-field col s6">
+                <i class="material-icons prefix">badge</i>
+                <input id="auth-login" type="text" >
+                <label for="auth-login">Логин</label>
+            </div>
+        </div>
+        <div class="row">
+            <div class="input-field col s6">
+                <i class="material-icons prefix">lock</i>
+                <input id="auth-password" type="password" class="validate">
+                <label for="auth-password">Пароль</label>
+            </div>
+        </div>
     </div>
     <div class="modal-footer">
-        <a href="<%=context%>/signup" class="modal-close waves-effect waves-green btn-flat red darken-3">Регистрация</a>
-        <a href="#!" class="waves-effect waves-green btn-flat red darken-4">Вход</a>
+        <b id="auth-message"></b>
+        <a href="<%=context%>/signup" class="waves-effect waves-green btn-flat red darken-3">Регистрация</a>
+        <a id = "auth-sign-in" href="#!" class="waves-effect waves-green btn-flat red darken-4">Вход</a>
 
     </div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
-<script src="<%=context%>/js/site.js?time= <%=new Date().getTime()%>"></script>
+<script src="<%=context%>/js/site.js"></script>
+<script src="<%=context%>/js/spa.js?time= <%=new Date().getTime()%>"></script>
 
 </body>
 </html>

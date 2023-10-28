@@ -3,8 +3,6 @@ package step.learning.dto.models;
 import org.apache.commons.fileupload.FileItem;
 import step.learning.services.formparse.FormParseResult;
 
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
 import java.io.File;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -22,18 +20,23 @@ public class RegFormModel {
     private String email;
     private Date birthdate;
     private boolean isAgree;
+
+    public String getAvatar() {
+        return avatar;
+    }
+
+    public void setAvatar(String avatar) {
+        this.avatar = avatar;
+    }
+
     private String avatar;
 
-//    public RegFormModel(HttpServletRequest request) throws ParseException {
-//        this.setName(request.getParameter("reg-name") );
-//        this.setLogin(request.getParameter("reg-login") );
-//        this.setPass(request.getParameter("reg-pass") );
-//        this.setRepeat(request.getParameter("reg-repeat") );
-//        this.setEmail(request.getParameter("reg-email") );
-//        this.setBirthdate(request.getParameter("reg-birthdate") );
-//        this.setIsAgree(request.getParameter("reg-rules") );
-//
-//    }
+    public String getBirthdateAsString() {
+        if( birthdate == null ) {
+            return "";
+        }
+        return formDate.format( getBirthdate() ) ;
+    }
 
     public RegFormModel(FormParseResult result) throws ParseException {
         Map<String, String> fields = result.getFields();
@@ -94,8 +97,7 @@ public class RegFormModel {
     }
     private static final SimpleDateFormat formDate =
             new SimpleDateFormat("yyyy-MM-dd");
-    
-    
+
     // region Accessor
     public String  setBirthdateAsString() {
         if (birthdate == null ) {

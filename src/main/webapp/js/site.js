@@ -1,39 +1,6 @@
 document.addEventListener('DOMContentLoaded', function() {
-    M.Modal.init(document.querySelectorAll('.modal'),
-        {opacity:	0.5	,
-        inDuration: 200,
-        outDuration: 200});
 
-    // const regForm = document.querySelector('form');
-    // regForm.addEventListener('submit', function(event) {
-    //     let valid = true;
-    //
-    //     // Валідація логіну
-    //     const login = document.getElementById('reg-login');
-    //     if (!login.value.match(/^[a-zA-Z0-9]{5,20}$/)) {
-    //         alert('Логін повинен містити 5-20 символів і містити тільки літери та цифри.');
-    //         valid = false;
-    //     }
-    //
-    //     // Валідація дати
-    //     const birthdate = document.getElementById('reg-birthdate');
-    //     if (!birthdate.value.match(/^\d{4}-\d{2}-\d{2}$/)) {
-    //         alert('Будь ласка, введіть дату у форматі РРРР-ММ-ДД.');
-    //         valid = false;
-    //     }
-    //
-    //     // Валідація пошти
-    //     const email = document.getElementById('reg-email');
-    //     const emailPattern = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
-    //     if (!email.value.match(emailPattern)) {
-    //         alert('Email wrong');
-    //         valid = false;
-    //     }
-    //
-    //     if (!valid) {
-    //         event.preventDefault();
-    //     }
-    // });
+
 
     const createButton = document.getElementById("db-create-button")
     if (createButton) createButton.addEventListener('click', createButtonClick);
@@ -43,6 +10,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const readButton = document.getElementById("db-read-button")
     if (readButton) readButton.addEventListener('click', readButtonClick);
+
+    document.getElementById('show-all-button').addEventListener('click', function() {
+        fetch('/db?all=true', {
+            method: 'COPY',
+        })
+            .then(response => response.json())
+            .then(data => showCalls(data))
+            .catch(error => console.error('Error:', error));
+    });
 });
 
 function createButtonClick(){
@@ -97,29 +73,52 @@ function readButtonClick() {
     fetch(window.location.href, {
         method: "COPY",
     })
-        .then(response => response.json())
-        .then(data => {
-            console.table(data);
-        });
+        .then(response => response.json()).then(showCalls) ;
 }
 
-//
-// function insertButtonClick(){
-//     const nameInput = document.querySelector('[name="user-name"]');
-//     if (! nameInput) throw '[name="user-name"] not found';
-//     const phoneInput = document.querySelector('[name="user-phone"]');
-//     if (! phoneInput) throw '[name="user-phone"] not found';
-//
-//     fetch(window.location.href,{
-//         method: 'POST',
-//         headers: {
-//             'Content-Type': 'application/json'
-//         },
-//         body: JSON.stringify({
-//             name: nameInput.value,
-//             phone: phoneInput.value
-//         })
-//     }).then(r => r.json()).then(j => {
-//         console.log(j)
-//     });
-// }
+
+function showCalls(j) {
+    var table = "<table><tr><th>id</th><th>name</th><th>phone</th><th>callMoment</th><th>Delete</th></tr>";
+    for (let call of j){
+        let m =  ( typeof call.callMoment != null ) ?
+            `<button data-id="${call.id}" onclick="callClick(event)">call</button>` : call.callMoment;
+        let d = `<button data-id="${call.id}" onclick="deleteClick(event)"><i class="material-icons red">clear</i></button>`
+        table += `<tr><td>${call.id}</td><td>${call.name}</td><td>${call.phone}</td><td>${m}</td><td>${d}</td></tr>`;
+    }
+    table += "</table>";
+    document.getElementById("calls-conteiner").innerHTML = table;
+}
+
+
+function callClick(e) {
+    const callId = e.target.getAttribute( "data-id" );
+    if (confirm( `MAKE CALL FOR ORDER No ${callId}? ` ) ){
+        fetch(window.location.href + "?call-id=" + callId, {
+            method: "PATCH",
+        }).then(r => r.json()).then( j => {
+            if (typeof j.callMoment == 'undefined') {
+                alert( j );
+            }
+            else {
+                e.target.parentNode.innerHTML = j.callMoment ;
+            }
+        }) ;
+    }
+}
+
+function deleteClick(e) {
+    const btn = e.target.closest('button');
+    const callId = e.target.getAttribute("data-id");
+    if (confirm(`DELETE ORDER No ${callId} ? `)) {
+        fetch(window.location.href + "?call-id=" + callId, {
+            method: "DELETE",
+        }).then(r => {
+            if (r.status === 202) {
+                let tr = e.btn.parentNode.parentNode;
+                tr.parentNode.removeChild(tr);
+            } else {
+                r.json().then(alert);
+            }
+        });
+    }
+}
